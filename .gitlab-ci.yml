@@ -1,0 +1,52 @@
+image:
+  name: python:3.7-stretch
+  entrypoint:
+    - '/usr/bin/env'
+    - 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
+
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  script:
+    - python -m venv venv
+  artifacts:
+    paths:
+      - ./venv
+
+test:
+  stage: test
+  dependencies:
+    - build
+  before_script:
+    - apt-get update
+    - apt-get install default-jdk -y
+  script:
+    - . ./venv/bin/activate
+    - pip install -e .
+    - python -m unittest discover .
+
+apply:
+  stage: deploy
+  dependencies:
+    - test
+  before_script:
+    - apt-get update
+    - apt -y install zip unzip
+    - pip install awscli
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_DEFAULT_REGION
+  script:
+    - zip -r module_seed.zip ./module_seed
+    - aws s3 cp readme.md s3://$INPUT_BUCKET/v$(python setup.py --version)/readme.md
+    - aws s3 cp module_seed.zip s3://$INPUT_BUCKET/v$(python setup.py --version)/module_seed.zip
+    - aws s3 cp main.py s3://$INPUT_BUCKET/v$(python setup.py --version)/main.py
+
+    - aws s3 cp readme.md s3://$INPUT_BUCKET/latest/readme.md
+    - aws s3 cp module_seed.zip s3://$INPUT_BUCKET/latest/module_seed.zip
+    - aws s3 cp main.py s3://$INPUT_BUCKET/latest/main.py
+  when: manual
