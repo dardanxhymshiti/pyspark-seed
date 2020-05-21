@@ -1,5 +1,3 @@
-from os.path import join as join_path
-
 
 def process(spark, input_path, output_path, save_mode='append'):
 
@@ -10,8 +8,7 @@ def process(spark, input_path, output_path, save_mode='append'):
     pass
 
     # output
-    store_processed_data_path = join_path('s3://', output_path)
-    df.write.parquet(store_processed_data_path, save_mode=save_mode)
+    df.write.parquet(output_path, save_mode=save_mode)
 
 
 
