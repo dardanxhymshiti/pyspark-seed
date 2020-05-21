@@ -23,8 +23,7 @@ def run(parameters):
     process_function = jobs[job_name]
     process_function(
         spark=spark,
-        input_bucket=parameters['input_bucket'],
-        output_bucket=parameters['output_bucket'],
-        output_bucket_prefix=parameters['output_bucket_prefix'],
+        input_path=parameters['input_path'],
+        output_path=parameters['output_path'],
         save_mode='append'
     )
